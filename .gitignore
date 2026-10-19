@@ -1,0 +1,32 @@
+# Build output
+artifacts/
+bin/
+obj/
+*.user
+*.suo
+
+# Local user configuration (copy Config.Build.user.props.template)
+Config.Build.user.props
+
+# Nested working copy of TikTools-app (kept next to this repo, not part of it)
+/TikTools-app/
+
+# The agent task description is an input, not part of the project
+/PEAKapi_TikTools_Implementation_Prompt.md
+
+# Tooling
+/.commandcode/
+
+# Build output of other projects that may be built in this folder
+/sonicboom-*.zip
+
+# Editor / OS noise
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local test artifacts
+TestResults/
+*.trx
+coverage*.xml

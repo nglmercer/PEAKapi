@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>com.github.nglmercer.PEAKapi</AssemblyName>
+    <RootNamespace>PeakRestApi</RootNamespace>
+    <AssemblyTitle>PEAKapi</AssemblyTitle>
+    <Version>1.0.0</Version>
+    <Description>Local, authenticated REST API for PEAK.</Description>
+    <IsPackable>false</IsPackable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../PeakRestApi.Core/PeakRestApi.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BepInEx is provided by the game at runtime, so only the compile assets are used. -->
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" ExcludeAssets="runtime" />
+
+    <!--
+      Source-only polyfills for C# language features that .NET Standard 2.1
+      does not ship. The same package is used by the official PEAK BepInEx
+      template.
+    -->
+    <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
+
+    <!--
+      Unity 6 reference assemblies. The game ships the real UnityEngine modules,
+      so these are compile-only and are never copied into the plugin folder.
+    -->
+    <PackageReference Include="UnityEngine.Modules" Version="6000.0.36" IncludeAssets="compile" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    PEAK's own assemblies (Assembly-CSharp, PhotonUnityNetworking, ...) are
+    proprietary and are not redistributable, so they cannot be referenced from
+    a package or committed to this repository. The game facing layer therefore
+    binds to them late, through the small reflection adapter in
+    src/PeakRestApi/Bridge. See docs/ARCHITECTURE.md, "Why the game layer is
+    reflection based".
+  -->
+
+</Project>

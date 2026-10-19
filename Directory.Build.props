@@ -1,0 +1,48 @@
+<Project>
+
+  <!--
+    Shared configuration for every PEAKapi project.
+
+    The target framework mirrors the PEAK modding template
+    (https://github.com/PEAKModding/BepInExTemplate): PEAK runs on Unity 6 and
+    mods must target .NET Standard 2.1 so the assembly loads inside the
+    game's Mono/IL2CPP profile. The .NET 10 SDK is only a *build* prerequisite,
+    it is never the runtime target.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>recommended</AnalysisMode>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Authors>PEAKapi contributors</Authors>
+    <Copyright>Copyright (c) 2026 PEAKapi contributors</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/nglmercer/PEAKapi</RepositoryUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
+  </PropertyGroup>
+
+  <!--
+    PEAK install layout. Used by Directory.Build.targets to compile against the
+    real game assemblies when a local install exists. See docs/INSTALLATION.md.
+  -->
+  <PropertyGroup>
+    <PathBeforeSteam Condition="$([MSBuild]::IsOSPlatform('Linux'))">$(HOME)/.local/share/</PathBeforeSteam>
+    <PathBeforeSteam Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(MSBuildProgramFiles32)/</PathBeforeSteam>
+    <PEAKGameRootDir Condition="'$(PEAKGameRootDir)' == ''">$(PathBeforeSteam)Steam/steamapps/common/PEAK/</PEAKGameRootDir>
+    <PEAKBepInExDir Condition="'$(PEAKBepInExDir)' == ''">$(PEAKGameRootDir)BepInEx/</PEAKBepInExDir>
+    <PeakManagedDir>$(PEAKGameRootDir)PEAK_Data/Managed/</PeakManagedDir>
+    <HasPeakGameAssemblies Condition="Exists('$(PeakManagedDir)Assembly-CSharp.dll')">true</HasPeakGameAssemblies>
+    <HasPeakGameAssemblies Condition="'$(HasPeakGameAssemblies)' == ''">false</HasPeakGameAssemblies>
+  </PropertyGroup>
+
+</Project>

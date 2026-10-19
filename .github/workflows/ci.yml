@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: dotnet test -c Release --no-build --verbosity normal
+
+      - name: Validate the OpenAPI contract
+        run: ./scripts/validate-openapi.sh
+
+      - name: Package
+        run: ./scripts/package.sh
+
+      - name: Check the package
+        run: |
+          set -euo pipefail
+          version=$(grep -oE '<Version>[^<]+</Version>' src/PeakRestApi/PeakRestApi.csproj | head -1 | cut -d'>' -f2 | cut -d'<' -f1)
+          archive="artifacts/dist/PEAKapi-$version.zip"
+          test -f "$archive"
+          unzip -l "$archive" | grep -q 'plugins/com.github.nglmercer.PEAKapi.dll'
+          unzip -l "$archive" | grep -q 'plugins/PeakRestApi.Core.dll'
+          unzip -l "$archive" | grep -q 'manifest.json'
+          # The game assemblies must never be shipped.
+          if unzip -l "$archive" | grep -qiE 'Assembly-CSharp|PhotonUnityNetworking|PEAK_Data'; then
+            echo "The package must not contain the game assemblies." >&2
+            exit 1
+          fi
+
+      - name: Upload the package
+        uses: actions/upload-artifact@v4
+        with:
+          name: PEAKapi
+          path: artifacts/dist/
+
+  contract:
+    name: OpenAPI contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate the contract against the implementation
+        run: ./scripts/validate-openapi.sh

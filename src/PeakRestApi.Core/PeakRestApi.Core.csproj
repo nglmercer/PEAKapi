@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>PeakRestApi.Core</AssemblyName>
+    <RootNamespace>PeakRestApi.Core</RootNamespace>
+    <Description>Game independent HTTP, security and dispatch layer of PEAKapi.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="../../docs/openapi.json" LogicalName="openapi.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="PeakRestApi.Tests" />
+  </ItemGroup>
+
+</Project>
