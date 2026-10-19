@@ -105,6 +105,31 @@ cargo test -p tiktools-plugin-api manifest
 The Rust test parses the manifest with the real manifest validator, so a
 manifest that TikTools would refuse cannot pass.
 
+## What was observed live
+
+These are the answers a running PEAK 2.6.b gave, captured under Proton:
+
+| Request | Answer |
+|---|---|
+| `GET /health` without a token | `401` with `{"code":"UNAUTHORIZED","message":"A valid bearer token is required."}` |
+| `GET /health` with the token | `504` with `{"code":"COMMAND_TIMEOUT","message":"Command expired before execution; no action was performed."}` |
+
+The second answer is the important one. It shows that the token was
+accepted, that the request reached the router, that the request was queued on
+the Unity main thread and that the queue expired without running it. That is
+the documented behaviour for a game that is not running its main loop.
+
+The game was in that state because Steamworks.NET asked Steam to restart it:
+
+```
+[Steamworks.NET] Shutting down because RestartAppIfNecessary returned true. Steam will restart the application.
+```
+
+The same happens with the BepInEx loader removed, so it is a property of
+this environment and not of PEAKapi. It has to be resolved by starting the
+game from a Steam client that can launch it, and by playing into a level,
+before the gameplay rows above can be checked.
+
 ## The environment these results come from
 
 | | |

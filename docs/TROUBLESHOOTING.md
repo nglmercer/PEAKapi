@@ -76,6 +76,18 @@ level, or when the game is shutting down.
 PEAK uses Steamworks.NET. Started outside Steam it asks Steam to restart it
 and shuts down again. Start the game from the Steam client.
 
+The message in the game's `Player.log` is:
+
+```
+[Steamworks.NET] Shutting down because RestartAppIfNecessary returned true. Steam will restart the application.
+```
+
+This has nothing to do with PEAKapi: it also happens with the BepInEx loader
+removed. While the game is in that restart loop the REST server is up for a
+few seconds and then disappears with the game. A request that arrives in that
+window is answered with `504 COMMAND_TIMEOUT`, because the game is not
+running its main loop yet.
+
 ## A spawn does nothing
 
 Check the order of the answers:
