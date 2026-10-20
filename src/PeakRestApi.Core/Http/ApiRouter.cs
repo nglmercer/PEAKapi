@@ -248,17 +248,35 @@ public sealed class ApiRouter
         if (path == "/health" || path == "/api/game/state")
         {
             var s = game.State();
-            var ready = s.GameRunning && s.InLevel;
+
+            // Gameplay is only ready when the game is actually running, a
+            // level is loaded, and the local peer may change the world. When
+            // the host is not required, a guest may change the world too.
+            var ready = s.GameRunning
+                        && s.InLevel
+                        && (s.IsHost || !options.RequireHost);
+
             if (path == "/health")
             {
                 return new ApiResponse(200, new
                 {
+                    // "ready" means the API server answers. It is not a
+                    // claim that the game is playable; gameplayReady is.
                     status = "ready",
                     apiVersion = "1.0.0",
                     gameRunning = s.GameRunning,
                     inLevel = s.InLevel,
                     isHost = s.IsHost,
                     gameplayReady = ready,
+
+                    // The breakdown of the readiness, so a client can tell
+                    // the different reasons apart.
+                    serverAlive = true,
+                    gameInitialized = s.GameInitialized,
+                    sceneLoaded = s.SceneLoaded,
+                    hostAuthority = s.IsHost,
+                    authorityKnown = s.AuthorityKnown,
+                    eosState = s.EosState,
                 });
             }
 
@@ -268,6 +286,10 @@ public sealed class ApiRouter
                 inLevel = s.InLevel,
                 isHost = s.IsHost,
                 gameplayReady = ready,
+                gameInitialized = s.GameInitialized,
+                sceneLoaded = s.SceneLoaded,
+                authorityKnown = s.AuthorityKnown,
+                eosState = s.EosState,
                 scene = s.Scene,
                 sessionId = s.SessionId,
             });

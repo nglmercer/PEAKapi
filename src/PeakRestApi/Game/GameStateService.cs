@@ -106,6 +106,62 @@ internal sealed class GameStateService
     public bool IsHost => context.Authority.IsHost;
 
     /// <summary>
+    /// True when the authority of the local peer could be observed. It is
+    /// false while the networking layer is not loaded, because an unknown
+    /// authority is never an authority.
+    /// </summary>
+    public bool AuthorityKnown => context.Authority.AuthorityKnown;
+
+    /// <summary>
+    /// True when the game's assemblies are loaded, so the API can bind to
+    /// the game at all.
+    /// </summary>
+    public bool GameInitialized => context.Types.GameLoaded;
+
+    /// <summary>
+    /// True when a scene is loaded.
+    /// </summary>
+    public bool SceneLoaded
+    {
+        get
+        {
+            try
+            {
+                var scene = SceneManager.GetActiveScene();
+                return !string.IsNullOrEmpty(scene.name);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// What could be observed about the Epic Online Services SDK.
+    /// </summary>
+    /// <remarks>
+    /// The plugin can see whether the game build contains the EOS integration
+    /// at all. It cannot see whether the SDK initialised, so it does not
+    /// claim that: <c>present</c> means the SDK is part of the build and
+    /// <c>absent</c> means it is not. A degraded mode, in which the SDK was
+    /// removed from the game folder, is reported as <c>absent</c> as well,
+    /// because from the game's point of view there is no EOS SDK then.
+    /// </remarks>
+    public string EosState
+    {
+        get
+        {
+            if (!context.Types.GameLoaded)
+            {
+                return "unknown";
+            }
+
+            return context.Types.EosPresent ? "present" : "absent";
+        }
+    }
+
+    /// <summary>
     /// A session scoped identifier for the current room and level.
     /// </summary>
     public string SessionId
@@ -132,9 +188,13 @@ internal sealed class GameStateService
     {
         return new GameSnapshot
         {
-            GameRunning = true,
+            GameRunning = GameInitialized,
             InLevel = InLevel,
             IsHost = IsHost,
+            GameInitialized = GameInitialized,
+            SceneLoaded = SceneLoaded,
+            AuthorityKnown = AuthorityKnown,
+            EosState = EosState,
             Scene = Scene,
             SessionId = SessionId,
         };

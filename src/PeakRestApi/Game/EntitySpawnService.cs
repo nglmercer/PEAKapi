@@ -334,9 +334,17 @@ internal sealed class EntitySpawnService
             return (false, "The running game does not contain an item named '" + kind.ItemName + "'.");
         }
 
-        if (PrefabNames(kind).Count > 0)
+        // The prefab names of an entity are only a list of candidates. The
+        // running game has to actually contain one of them, either as a type
+        // or as a prefab of the loaded scene. Reporting the entity as
+        // available just because the candidate list is not empty would claim
+        // a spawn that cannot work.
+        foreach (var name in PrefabNames(kind))
         {
-            return (true, null);
+            if (context.Types.HasGameType(name) || SceneComponents.PrefabExists(name))
+            {
+                return (true, null);
+            }
         }
 
         return (false, "The running level does not contain a '" + kind.DisplayName + "'.");

@@ -32,6 +32,23 @@ jobs:
       - name: Test
         run: dotnet test -c Release --no-build --verbosity normal
 
+      - name: Check the shell scripts
+        run: |
+          set -euo pipefail
+          for script in scripts/*.sh tests/shell/*.sh; do
+            bash -n "$script"
+          done
+
+      - name: ShellCheck
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+          shellcheck --severity=warning scripts/*.sh tests/shell/*.sh
+
+      - name: Test the Linux helper
+        run: ./tests/shell/peak-linux-test.sh
+
       - name: Validate the OpenAPI contract
         run: ./scripts/validate-openapi.sh
 

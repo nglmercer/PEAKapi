@@ -63,6 +63,97 @@ public sealed class RouterTests
     }
 
     [Fact]
+    public async Task ReportsGameplayAsNotReadyWithoutHostAuthority()
+    {
+        using var host = new TestHost();
+        host.Game.IsHost = false;
+
+        var response = await host.Send("GET", "/health");
+        var body = Parse(response.Json);
+
+        // The published contract says that gameplayReady is false without
+        // host authority, because a guest may not change the world.
+        Assert.False(body["gameplayReady"]?.Value<bool>());
+        Assert.False(body["isHost"]?.Value<bool>());
+        Assert.True(body["inLevel"]?.Value<bool>());
+    }
+
+    [Fact]
+    public async Task ReportsGameplayAsReadyForTheHostInALevel()
+    {
+        using var host = new TestHost();
+
+        var response = await host.Send("GET", "/health");
+        var body = Parse(response.Json);
+
+        Assert.True(body["gameplayReady"]?.Value<bool>());
+        Assert.True(body["hostAuthority"]?.Value<bool>());
+        Assert.True(body["authorityKnown"]?.Value<bool>());
+    }
+
+    [Fact]
+    public async Task ReportsTheReadinessBreakdown()
+    {
+        using var host = new TestHost();
+        host.Game.InLevel = false;
+
+        var response = await host.Send("GET", "/health");
+        var body = Parse(response.Json);
+
+        // Every reason is told apart, and nothing claims a state that was
+        // not observed.
+        Assert.True(body["serverAlive"]?.Value<bool>());
+        Assert.True(body["gameRunning"]?.Value<bool>());
+        Assert.True(body["gameInitialized"]?.Value<bool>());
+        Assert.True(body["sceneLoaded"]?.Value<bool>());
+        Assert.False(body["inLevel"]?.Value<bool>());
+        Assert.False(body["gameplayReady"]?.Value<bool>());
+        Assert.Equal("present", body["eosState"]?.ToString());
+    }
+
+    [Fact]
+    public async Task ReportsTheGameAsNotRunningWhenItIsNotInitialized()
+    {
+        using var host = new TestHost();
+        host.Game.GameInitialized = false;
+
+        var response = await host.Send("GET", "/health");
+        var body = Parse(response.Json);
+
+        Assert.False(body["gameRunning"]?.Value<bool>());
+        Assert.False(body["gameInitialized"]?.Value<bool>());
+        Assert.False(body["gameplayReady"]?.Value<bool>());
+        Assert.Equal("unknown", body["eosState"]?.ToString());
+    }
+
+    [Fact]
+    public async Task ReportsAnUnknownEosStateWhenTheGameIsNotLoaded()
+    {
+        using var host = new TestHost();
+        host.Game.GameInitialized = false;
+
+        var response = await host.Send("GET", "/health");
+        var body = Parse(response.Json);
+
+        Assert.Equal("unknown", body["eosState"]?.ToString());
+    }
+
+    [Fact]
+    public async Task ReportsTheGameState()
+    {
+        using var host = new TestHost();
+        host.Game.IsHost = false;
+
+        var response = await host.Send("GET", "/api/game/state");
+        var body = Parse(response.Json);
+
+        Assert.Equal(200, response.Status);
+        Assert.False(body["gameplayReady"]?.Value<bool>());
+        Assert.True(body["authorityKnown"]?.Value<bool>());
+        Assert.Equal("WilIsland", body["scene"]?.ToString());
+    }
+
+    [Fact]
     public async Task ServesTheVersionReport()
     {
         using var host = new TestHost();

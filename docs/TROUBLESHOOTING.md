@@ -10,16 +10,23 @@ plugin is not even loaded yet in that case.
 * Is `winhttp.dll` next to `PEAK.exe`? The BepInEx pack has to be unpacked
   into the game folder, not into a subfolder.
 * Is `doorstop_config.ini` next to it as well?
-* On Linux and Proton, Proton ships its own `winhttp.dll`, which wins over
-  the copy in the game folder. Add the registry override described in
-  [INSTALLATION.md](INSTALLATION.md):
+* On Linux and Proton, the launch option has to be set. Without it, Wine
+  loads its own `winhttp.dll` and the proxy in the game folder is never
+  loaded, so the loader never runs:
 
-  ```reg
-  [Software\\Wine\\DllOverrides]
-  "winhttp"="native"
+  ```
+  WINEDLLOVERRIDES="winhttp=n,b" %command%
   ```
 
-  in `~/.local/share/Steam/steamapps/compatdata/3527290/pfx/user.reg`.
+  See [INSTALLATION.md](INSTALLATION.md). Editing `pfx/user.reg` does not
+  work for this game.
+
+**The log exists but is old.**
+
+`BepInEx/LogOutput.log` has to be from the current launch. A log from
+yesterday only says that the injection worked once.
+`./scripts/peak-linux.sh verify` compares the timestamp with the current
+time and says so.
 
 **The log exists but does not mention PEAKapi.**
 
@@ -86,21 +93,36 @@ GameHandler:Initialize
 GameBooter:AutoBoot
 ```
 
-This was verified on 2026-10-19/20 by A/B launches: the game crashes with
-the identical stack with PEAKapi removed, and again with BepInEx fully
-disabled (`enabled = false` in `doorstop_config.ini`). No PEAKapi or
-BepInEx frame appears in any crash dump. The fault is inside
-`EOSSDK-Win64-Shipping.dll` running under Proton, so no PEAKapi update can
-fix it. Things worth trying, in order:
+**This is not a PEAKapi problem, and it is not a plain Proton problem
+either.** The full analysis, with the measurements, is in
+[LINUX_ROOT_CAUSE.md](LINUX_ROOT_CAUSE.md). The short version:
 
-1. Switch the Proton version for PEAK (Steam → Properties → Compatibility):
-   try Proton 9/10 stable or GE-Proton instead of Proton Experimental.
+* The crash happens before any level is loaded, so no PEAKapi code is
+  involved. The stack contains no managed frame of PEAKapi.
+* It happens when the BepInEx proxy is in the process. Without the proxy the
+  same game on the same prefix initialises EOS without a problem.
+* The proxy forwards the `winhttp.dll` functions by name to the real
+  `winhttp.dll`. The EOS SDK imports two of them. When the real DLL cannot
+  be loaded, the forwarding table is empty and the call becomes a jump to
+  address zero, which faults inside the EOS SDK.
+* The DLL override decides whether the real DLL is found. The override
+  `winhttp=n` loads the proxy but leaves the proxy without a DLL to forward
+  to. The override `winhttp=n,b` loads the proxy **and** the real DLL.
+
+What to do:
+
+1. Use the launch option `WINEDLLOVERRIDES="winhttp=n,b" %command%`, not
+   `winhttp=n` and not the registry. See [INSTALLATION.md](INSTALLATION.md).
 2. Verify the game files (Steam → Properties → Installed Files).
 3. Disable the Steam Overlay for PEAK.
-4. If it still crashes, report it against PEAK/EOS on Proton with the
-   newest `Crashes/Crash_*/output_log.txt` attached; mention EOS SDK
-   1.19.1.2 and that the game crashes in `EOS_Initialize` on a vanilla
-   install.
+4. If it still crashes, report it with the newest
+   `Crashes/Crash_*/output_log.txt` attached; mention EOS SDK 1.19.1.2 and
+   that the crash happens in `EOS_Initialize` with the BepInEx proxy
+   loaded.
+
+`./scripts/peak-linux.sh eos-disable` renames the EOS SDK for a local
+diagnosis. It is a degraded mode, not a fix: online and crossplay features
+can stop working, and it is never the default.
 
 While the game is in this state the REST server answers for a few seconds
 and then disappears with the game; see the next section.

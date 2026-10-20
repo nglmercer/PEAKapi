@@ -87,6 +87,11 @@ internal sealed class PhotonSpawner
     /// <summary>
     /// Destroys a networked object for everybody in the room.
     /// </summary>
+    /// <remarks>
+    /// The reflection error is not swallowed: a destroy that did not happen
+    /// has to be reported, otherwise the API would forget an object that is
+    /// still in the world and release its quota.
+    /// </remarks>
     public static bool Destroy(object target)
     {
         try
@@ -99,7 +104,12 @@ internal sealed class PhotonSpawner
                     var photonNetwork = FindPhotonNetwork(view.GetType());
                     if (photonNetwork != null)
                     {
-                        GameMembers.Invoke(null, photonNetwork, "Destroy", new object?[] { view }, out _);
+                        GameMembers.Invoke(null, photonNetwork, "Destroy", new object?[] { view }, out var error);
+                        if (error != null)
+                        {
+                            return false;
+                        }
+
                         return true;
                     }
                 }

@@ -46,6 +46,22 @@ public sealed class RestServer : IDisposable
 
     public void Start()
     {
+        lock (gate)
+        {
+            if (disposed)
+            {
+                throw new ObjectDisposedException(nameof(RestServer));
+            }
+
+            if (listener.IsListening)
+            {
+                // A second start would add a second prefix and then fail in
+                // the middle of the listener, leaving it in a half started
+                // state.
+                throw new InvalidOperationException("The REST server is already running.");
+            }
+        }
+
         var address = IPAddress.Parse(options.Host).ToString();
         var host = address.Contains(":") ? "[" + address + "]" : address;
         listener.Prefixes.Add("http://" + host + ":" + options.Port + "/");
@@ -309,7 +325,6 @@ public sealed class RestServer : IDisposable
 
     public void Dispose()
     {
-        StopAsync().GetAwaiter().GetResult();
         lock (gate)
         {
             if (disposed)
@@ -318,7 +333,27 @@ public sealed class RestServer : IDisposable
             }
 
             disposed = true;
-            stop.Dispose();
         }
+
+        // The listener is closed right away, so nothing waits for a request
+        // that is still in flight. The graceful shutdown is done by
+        // StopAsync, which the caller runs before this.
+        try
+        {
+            stop.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        try
+        {
+            listener.Close();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+
+        stop.Dispose();
     }
 }

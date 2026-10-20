@@ -34,9 +34,18 @@ to exist with the shape the adapter expects.
 | `PhotonNetwork.InstantiateItemRoom(string, Vector3, Quaternion, bool)` | `PhotonUnityNetworking.dll` | Creating an item in the room |
 | `PhotonView.RPC(string, RpcTarget, object[])` | `PhotonUnityNetworking.dll` | Handing a hazard to the game's AI |
 | `PhotonNetwork.Destroy(PhotonView)` | `PhotonUnityNetworking.dll` | Removing an object for everybody |
+| `PhotonNetwork.IsMasterClient`, `PhotonNetwork.OfflineMode`, `PhotonNetwork.InRoom`, `PhotonNetwork.IsConnected` | `PhotonUnityNetworking.dll` | Who may change the world |
 
 The entity types `MushroomZombie`, `BeeSwarm`, `Scorpion`, `Scoutmaster`,
 `Tornado`, `TumbleWeed` and `Dynamite` all exist in `Assembly-CSharp`.
+
+The EOS integration of the game was read out of the shipped assemblies as
+well: `Portningsbolaget.EOSCommon.EpicOnlineService` and
+`Epic.OnlineServices.Platform.PlatformInterface` are the entry points of the
+crash that is analysed in [LINUX_ROOT_CAUSE.md](LINUX_ROOT_CAUSE.md). The
+plugin can see that the game build contains the EOS integration
+(`eosState: present`) and nothing more; it does not claim to know whether the
+SDK initialised.
 
 ## What was not verified
 
@@ -45,8 +54,9 @@ in a level, and it does not say that a second client sees it.
 
 | Gate | State |
 |---|---|
-| The plugin loads and the REST server starts | verified on PEAK 2.6.b under Proton |
+| The plugin loads and the REST server starts | verified on PEAK 2.6.b under Proton 11.0-100 |
 | The bearer token is enforced | verified, an unauthenticated request gets `401` |
+| The loader override makes the proxy win | verified with the Wine loader trace, see [LINUX_ROOT_CAUSE.md](LINUX_ROOT_CAUSE.md) |
 | The item catalog lists the real items | **not verified in a level**, the code path is implemented and unit tested with a fake bridge |
 | An item reaches a player | **not verified in a level** |
 | An entity appears and behaves | **not verified in a level** |
@@ -84,6 +94,16 @@ bypass the `-force-vulkan` parameter. The generic BepInEx 5.4.23.3
 `winhttp.dll` also loads under Proton and starts the plugin, but it replaces
 the game's `GetProcAddress`, which the game uses through the Steamworks
 runtime. The PEAK fork is the supported combination.
+
+The shipped `winhttp.dll` of the PEAK pack was disassembled for this
+release. It forwards its exports with jump table thunks, which are
+transparent for every calling convention, and it is **not** built from the
+`proxygen.lua` that is in the fork's repository today: that generator still
+emits call wrappers with a zero argument prototype, which corrupts the
+arguments of every function with more than four parameters. The two have to
+be reconciled before the fork is built again. The details, and the exports
+that resolve to nothing, are in
+[LINUX_ROOT_CAUSE.md](LINUX_ROOT_CAUSE.md).
 
 ## References
 

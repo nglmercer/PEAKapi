@@ -6,13 +6,53 @@ namespace PeakRestApi.Core.Models;
 /// <summary>
 /// A non-sensitive view of the current game session.
 /// </summary>
+/// <remarks>
+/// The readiness fields are separate on purpose: a client has to be able to
+/// tell <em>why</em> the API is not ready, and it must never be told that it
+/// is ready when it is not. Every field is observed from the running game;
+/// nothing here is assumed.
+/// </remarks>
 public sealed class GameSnapshot
 {
+    /// <summary>
+    /// The game process is alive and the plugin is talking to it.
+    /// </summary>
     public bool GameRunning { get; set; }
 
+    /// <summary>
+    /// A gameplay level is loaded.
+    /// </summary>
     public bool InLevel { get; set; }
 
+    /// <summary>
+    /// The local peer is the room host, so it may change the world.
+    /// </summary>
     public bool IsHost { get; set; }
+
+    /// <summary>
+    /// The game's assemblies are loaded, so the API can bind to the game.
+    /// </summary>
+    public bool GameInitialized { get; set; }
+
+    /// <summary>
+    /// A scene is loaded.
+    /// </summary>
+    public bool SceneLoaded { get; set; }
+
+    /// <summary>
+    /// The authority of the local peer is known. It is false while the
+    /// networking layer is not loaded yet, because an unknown authority is
+    /// never an authority.
+    /// </summary>
+    public bool AuthorityKnown { get; set; }
+
+    /// <summary>
+    /// What could be observed about the Epic Online Services SDK:
+    /// <c>absent</c> (the game build has no EOS integration), <c>present</c>
+    /// (the SDK is part of the build, but the plugin cannot observe its
+    /// runtime state) or <c>unknown</c>.
+    /// </summary>
+    public string EosState { get; set; } = "unknown";
 
     public string Scene { get; set; } = "unknown";
 

@@ -27,6 +27,13 @@ internal sealed class SpawnOwnershipRegistry
 
         public required object Target { get; init; }
 
+        /// <summary>
+        /// False when the object cannot be removed again, for example an item
+        /// that was handed to a player: it lives in the player's inventory
+        /// and there is no world object to destroy.
+        /// </summary>
+        public bool Despawnable { get; init; } = true;
+
         public long Generation { get; set; }
 
         public double? ExpiresAtUnixSeconds { get; set; }
@@ -39,7 +46,13 @@ internal sealed class SpawnOwnershipRegistry
     /// <summary>
     /// Registers a created object and returns its opaque instance id.
     /// </summary>
-    public string Register(string kind, string catalogId, object target, long generation, double? expiresAtUnixSeconds)
+    public string Register(
+        string kind,
+        string catalogId,
+        object target,
+        long generation,
+        double? expiresAtUnixSeconds,
+        bool despawnable = true)
     {
         lock (gate)
         {
@@ -53,11 +66,28 @@ internal sealed class SpawnOwnershipRegistry
                 CatalogId = catalogId,
                 Kind = kind,
                 Target = target,
+                Despawnable = despawnable,
                 Generation = generation,
                 ExpiresAtUnixSeconds = expiresAtUnixSeconds,
             };
 
             return id;
+        }
+    }
+
+    /// <summary>
+    /// Puts an entry back under its original id.
+    /// </summary>
+    /// <remarks>
+    /// This is used when a despawn failed: the object is still in the world
+    /// and the client still knows the id it was given. Registering it again
+    /// would mint a new id and the object could never be removed.
+    /// </remarks>
+    public void Restore(Entry entry)
+    {
+        lock (gate)
+        {
+            entries[entry.Id] = entry;
         }
     }
 

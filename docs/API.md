@@ -78,13 +78,31 @@ A failure looks like this:
   "gameRunning": true,
   "inLevel": false,
   "isHost": false,
-  "gameplayReady": false
+  "gameplayReady": false,
+  "serverAlive": true,
+  "gameInitialized": true,
+  "sceneLoaded": true,
+  "hostAuthority": false,
+  "authorityKnown": true,
+  "eosState": "present"
 }
 ```
 
 `gameplayReady` is the field a client should look at. It is only true when
 the game is running, a level is loaded and the local peer may change the
-world. A reachable server on its own is not enough.
+world. A reachable server on its own is not enough, and `status` only says
+that the API answers.
+
+The other fields say why the API is not ready:
+
+| Field | What it means |
+|---|---|
+| `serverAlive` | The API server is up. It is true whenever the answer arrives. |
+| `gameInitialized` | The game's assemblies are loaded, so the API can bind to the game. |
+| `sceneLoaded` | A scene is loaded. |
+| `hostAuthority` | The local peer is the room host. |
+| `authorityKnown` | The authority could be observed. It is false while the networking layer is not loaded, because an unknown authority is never an authority. |
+| `eosState` | `present`, `absent` or `unknown`. The plugin can see whether the game build contains the Epic Online Services SDK, but not whether it initialised, and it does not claim that it did. |
 
 ## GET /api/version
 
@@ -126,6 +144,10 @@ that reason instead of a generic failure.
   "inLevel": true,
   "isHost": true,
   "gameplayReady": true,
+  "gameInitialized": true,
+  "sceneLoaded": true,
+  "authorityKnown": true,
+  "eosState": "present",
   "scene": "WilIsland",
   "sessionId": "WilIsland-a4"
 }

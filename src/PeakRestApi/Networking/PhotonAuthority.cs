@@ -41,6 +41,17 @@ internal sealed class PhotonAuthority
     }
 
     /// <summary>
+    /// True when the authority of the local peer could be observed.
+    /// </summary>
+    /// <remarks>
+    /// The networking layer is only available once the game's assemblies are
+    /// loaded. Before that the authority is unknown, and an unknown authority
+    /// is not an authority: reporting <c>true</c> here would let a peer
+    /// change the world before it was ever shown to be the host.
+    /// </remarks>
+    public bool AuthorityKnown => types.PhotonNetwork != null;
+
+    /// <summary>
     /// True when the local peer is the room host.
     /// </summary>
     public bool IsHost
@@ -49,9 +60,10 @@ internal sealed class PhotonAuthority
         {
             if (types.PhotonNetwork == null)
             {
-                // Without Photon there is no multiplayer session at all, so the
-                // local peer is the only possible authority.
-                return true;
+                // The networking layer is not loaded yet, so the authority of
+                // the local peer is unknown. An unknown authority is never
+                // an authority.
+                return false;
             }
 
             if (ReadStaticBool("IsMasterClient"))
