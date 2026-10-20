@@ -78,8 +78,8 @@ marked as passed without an observation.
 | 1 | Start PEAK with BepInEx and PEAKapi | `BepInEx/LogOutput.log` mentions PEAKapi, the listener is only on the configured interface | **pending** |
 | 2 | Ask for `/health` in the menu | `gameplayReady` is `false` | **pending** |
 | 3 | Enter a private level as the host | `isHost` is `true`, `gameplayReady` is `true` | **pending** |
-| 4 | `GET /api/catalog/items` | The real items are listed, including a modded one if one is installed | **pending** |
-| 5 | `POST /api/spawn/item` with a real id | The item appears, it can be picked up and used | **pending** |
+| 4 | `GET /api/catalog/items` | The real items are listed, including a modded one if one is installed | **verified** in `Level_9`, the catalog listed the real items |
+| 5 | `POST /api/spawn/item` with a real id | The item appears, it can be picked up and used | **the API reported success** in `Level_9`; whether it is visible in the game still needs eyes on the screen |
 | 6 | Join a second client | The item is visible to both, the authority stays with the host | **pending** |
 | 7 | `POST /api/spawn/entity` for every spawnable entity | The entity appears, its AI starts, it collides | **pending** |
 | 8 | `POST /api/spawn/hazard` for every spawnable hazard | The hazard appears, it behaves, it expires | **pending** |
@@ -151,6 +151,38 @@ Steamworks.NET asks Steam to restart it:
 
 The same happens with the BepInEx loader removed, so it is a property of
 this environment and not of PEAKapi.
+
+## What was observed in a level
+
+On 2026-10-19, in the level `Level_9` of a running PEAK 2.6.b under Proton
+11.0-100, with the API on the loopback interface and the local peer as the
+host:
+
+| Request | Answer |
+|---|---|
+| `GET /health` | `inLevel: true`, `gameplayReady: true`, `isHost: true`, `eosState: "present"` |
+| `GET /api/game/state` | `scene: "Level_9"`, `sessionId: "Level_9-a1"` |
+| `GET /api/capabilities` | `items.available: true`, no reason |
+| `GET /api/catalog/items` | the real items, for example `AloeVera` and `Airplane Food` |
+| `GET /api/players` | one player, `p1`, the local host |
+| `POST /api/spawn/item` (`random_player`, `AloeVera`) | `success: true`, `count: 1`, id `item-1-5`, `playerId: p1` |
+| `POST /api/spawn/item` (`world_position`, `Airplane Food`) | `success: true`, `count: 1`, id `item-2-5` |
+| `POST /api/entities/despawn` (`item-2-5`) | `success: true`, `removed: 1` |
+| `POST /api/entities/despawn` (`item-1-5`) | `409 DESPAWN_NOT_SUPPORTED`, the item is in the inventory of the player |
+
+The same requests in the lobby, the `Airport` scene, are refused with
+`409 GAME_NOT_READY`. The gate is the game's own `m_inAirport` flag, not
+PEAKapi.
+
+The despawn of the world placed item is the strongest evidence that the
+object was really created: a Photon room object cannot be destroyed again if
+it was never instantiated. The handed over item is correctly refused, because
+it lives in the inventory of the player and there is no world object to
+remove.
+
+**Still open:** that the item is visible in the game needs eyes on the
+screen, and the session had only one player, so the replication is still
+untested.
 
 ## The runtime matrix
 
