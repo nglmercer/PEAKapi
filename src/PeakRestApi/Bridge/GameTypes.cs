@@ -46,6 +46,19 @@ internal sealed class GameTypes
     /// </summary>
     public IReadOnlyCollection<string> GameTypeNames { get; private set; } = Array.Empty<string>();
 
+    /// <summary>
+    /// True when the Epic Online Services integration is part of the running
+    /// game.
+    /// </summary>
+    /// <remarks>
+    /// The integration lives in its own assembly, <c>EpicOnlineService.dll</c>,
+    /// and not in the game assembly, so it is resolved across every loaded
+    /// assembly. The plugin can see that the integration is there, but it
+    /// cannot see whether the SDK initialised, and it does not claim that it
+    /// did.
+    /// </remarks>
+    public bool EosPresent { get; private set; }
+
     public bool GameLoaded => GameAssembly != null;
 
     public bool PhotonLoaded => PhotonNetwork != null;
@@ -93,6 +106,12 @@ internal sealed class GameTypes
         PhotonNetwork = FindType("Photon.Pun.PhotonNetwork");
         PhotonView = FindType("Photon.Pun.PhotonView");
         PhotonPlayer = FindType("Photon.Realtime.PhotonPlayer");
+
+        // The Epic Online Services integration is in its own assembly, so it
+        // is looked up across every loaded assembly.
+        EosPresent = FindType("Epic.OnlineServices.Bindings") != null
+                     || FindType("Portningsbolaget.EOSCommon.EpicOnlineService") != null
+                     || FindType("EpicOnlineService") != null;
 
         GameTypeNames = CollectTypeNames(game);
         return true;

@@ -86,7 +86,7 @@ internal sealed class PlayerService
                 Character = character,
                 Position = ReadPosition(character),
                 IsLocal = isLocal,
-                IsHost = isLocal && context.Config.RequireHost && IsHostPeer(),
+                IsHost = isLocal && IsHostPeer(),
                 IsAlive = !dead,
                 IsGhost = ghost,
                 FullyPassedOut = passedOut,

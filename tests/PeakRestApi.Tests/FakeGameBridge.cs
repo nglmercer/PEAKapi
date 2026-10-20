@@ -24,6 +24,15 @@ internal sealed class FakeGameBridge : IGameBridge
 
     public bool IsHost { get; set; } = true;
 
+    /// <summary>
+    /// Stands for "the game's assemblies are loaded".
+    /// </summary>
+    public bool GameInitialized { get; set; } = true;
+
+    public bool AuthorityKnown { get; set; } = true;
+
+    public string EosState { get; set; } = "present";
+
     public int SpawnCalls { get; private set; }
 
     public int DespawnCalls { get; private set; }
@@ -68,9 +77,13 @@ internal sealed class FakeGameBridge : IGameBridge
 
     public GameSnapshot State() => new()
     {
-        GameRunning = true,
+        GameRunning = GameInitialized,
         InLevel = InLevel,
         IsHost = IsHost,
+        GameInitialized = GameInitialized,
+        SceneLoaded = true,
+        AuthorityKnown = AuthorityKnown,
+        EosState = GameInitialized ? EosState : "unknown",
         Scene = "WilIsland",
         SessionId = "test",
     };

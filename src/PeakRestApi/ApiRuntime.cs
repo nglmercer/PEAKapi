@@ -73,9 +73,20 @@ internal sealed class ApiRuntime : IDisposable
         }
         catch (Exception e)
         {
+            // The most common cause on Windows is that the URL prefix is not
+            // reserved for this user, not that another process uses the port.
             log.LogError(
                 "PEAKapi could not bind " + options.Host + ":" + options.Port + " (" + e.Message + "). "
-                + "Another process is probably using the port.");
+                + "Check that the port is free and that the address may be bound by this user.");
+            try
+            {
+                server.Dispose();
+            }
+            catch (Exception)
+            {
+                // The server never started, so there is nothing to release.
+            }
+
             server = null;
         }
     }
@@ -107,6 +118,13 @@ internal sealed class ApiRuntime : IDisposable
     /// <summary>
     /// Stops the REST listener and releases the command queue.
     /// </summary>
+    /// <remarks>
+    /// The order matters. The dispatcher is released first, so every request
+    /// that is still waiting for the Unity main thread fails immediately
+    /// instead of blocking the shutdown until its timeout expires. The
+    /// server is stopped with a bounded wait, because it runs on a thread
+    /// that is not the main thread.
+    /// </remarks>
     public void StopServer()
     {
         if (!started)
@@ -116,19 +134,39 @@ internal sealed class ApiRuntime : IDisposable
 
         started = false;
 
-        try
-        {
-            server?.StopAsync().GetAwaiter().GetResult();
-        }
-        catch (Exception e)
-        {
-            log.LogWarning("PEAKapi could not stop the REST server cleanly: " + e.Message);
-        }
-
-        server = null;
+        // Release the queue first: the pending requests are answered with
+        // 503 right away, so the server does not have to wait for them.
         dispatcher?.Dispose();
         dispatcher = null;
+
+        var current = server;
+        server = null;
         adapter = null;
+
+        if (current != null)
+        {
+            try
+            {
+                var stopped = current.StopAsync();
+                if (!stopped.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    log.LogWarning("PEAKapi could not stop the REST server within 5 seconds; it was disposed anyway.");
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogWarning("PEAKapi could not stop the REST server cleanly: " + e.Message);
+            }
+
+            try
+            {
+                current.Dispose();
+            }
+            catch (Exception e)
+            {
+                log.LogWarning("PEAKapi could not release the REST server: " + e.Message);
+            }
+        }
     }
 
     public void Dispose() => StopServer();

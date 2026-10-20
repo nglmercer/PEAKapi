@@ -218,9 +218,24 @@ internal sealed class PeakGameAdapter : IGameBridge
                 "No API owned object with the id '" + instanceId + "' exists. It may already have been despawned.");
         }
 
+        if (!entry.Despawnable)
+        {
+            // The object cannot be taken back out of the world, for example
+            // an item that was handed to a player. It is put back under its
+            // original id, so the client can still ask about it.
+            context.Ownership.Restore(entry);
+            throw new ApiException(
+                409,
+                "DESPAWN_NOT_SUPPORTED",
+                "This object cannot be removed: " + entry.CatalogId + " was handed to a player and lives in their inventory.");
+        }
+
         if (!Destroy(entry.Target))
         {
-            context.Ownership.Register(entry.Kind, entry.CatalogId, entry.Target, entry.Generation, entry.ExpiresAtUnixSeconds);
+            // The object is still in the world. It is put back under the id
+            // the client knows, instead of being registered again with a new
+            // one, so that it can still be despawned later.
+            context.Ownership.Restore(entry);
             throw new ApiException(
                 409,
                 "DESPAWN_FAILED",
@@ -238,7 +253,7 @@ internal sealed class PeakGameAdapter : IGameBridge
         var outcome = new DespawnOutcome();
         foreach (var entry in context.Ownership.Snapshot())
         {
-            if (entry.Kind == "item")
+            if (!entry.Despawnable)
             {
                 outcome.Skipped.Add(entry.Id + " (delivered items cannot be recalled)");
                 continue;
@@ -256,7 +271,16 @@ internal sealed class PeakGameAdapter : IGameBridge
             }
         }
 
-        context.Ownership.Clear();
+        // The entries that could not be removed are kept, so the client can
+        // still ask about them and try again.
+        foreach (var entry in context.Ownership.Snapshot())
+        {
+            if (!entry.Despawnable)
+            {
+                context.Ownership.Restore(entry);
+            }
+        }
+
         context.Quotas.Reset();
         return outcome;
     }
@@ -323,6 +347,5 @@ internal sealed class PeakGameAdapter : IGameBridge
         return "not installed";
     }
 
-    internal static string PluginVersion =>
-        typeof(PeakGameAdapter).Assembly.GetName().Version?.ToString() ?? "unknown";
+    internal static string PluginVersion => Plugin.PluginVersion;
 }

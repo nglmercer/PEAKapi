@@ -161,7 +161,11 @@ internal sealed class ItemSpawnService
                 "The game accepted the delivery call but no item was created.");
         }
 
-        var id = context.Ownership.Register("item", item.Id, target.Character, generation, null);
+        // The item now lives in the player's inventory. There is no world
+        // object that could be destroyed again, so the entry is marked as not
+        // despawnable. Registering the character as the target would let a
+        // despawn request destroy the player.
+        var id = context.Ownership.Register("item", item.Id, target.Character, generation, null, despawnable: false);
         outcome.Spawned.Add(new SpawnedInstance { Id = id, CatalogId = item.Id, PlayerId = target.Id });
     }
 
