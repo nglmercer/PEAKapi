@@ -188,7 +188,7 @@ internal sealed class PlayerService
         if (view != null)
         {
             var owner = GameMembers.Get(view, "Owner");
-            var actorId = GameMembers.Get(owner, "ActorId");
+            var actorId = GameMembers.Get(owner, "ActorNumber") ?? GameMembers.Get(owner, "ActorId");
             if (actorId is int id)
             {
                 return "p" + id.ToString(System.Globalization.CultureInfo.InvariantCulture);

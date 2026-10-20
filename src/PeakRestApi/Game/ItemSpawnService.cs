@@ -90,13 +90,16 @@ internal sealed class ItemSpawnService
             throw new ApiException(404, "UNKNOWN_ITEM", "No item with the id '" + request.ItemId + "' exists.");
         }
 
-        if (request.Position.Mode == "world_position")
+        for (var i = 0; i < request.Quantity; i++)
         {
-            PlaceInWorld(request, item, generation, outcome);
-        }
-        else
-        {
-            HandToCharacter(request, item, generation, outcome);
+            if (request.Position.Mode == "world_position")
+            {
+                PlaceInWorld(request, item, generation, outcome);
+            }
+            else
+            {
+                HandToCharacter(request, item, generation, outcome);
+            }
         }
 
         outcome.Count = outcome.Spawned.Count;

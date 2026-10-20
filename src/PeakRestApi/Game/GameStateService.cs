@@ -117,7 +117,7 @@ internal sealed class GameStateService
             if (context.Types.PhotonNetwork != null)
             {
                 var local = GameMembers.GetStatic(context.Types.PhotonNetwork, "LocalPlayer");
-                var actor = GameMembers.Get(local, "ActorId");
+                var actor = GameMembers.Get(local, "ActorNumber") ?? GameMembers.Get(local, "ActorId");
                 if (actor is int id)
                 {
                     parts.Add("a" + id.ToString(System.Globalization.CultureInfo.InvariantCulture));

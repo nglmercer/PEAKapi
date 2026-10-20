@@ -24,6 +24,7 @@ internal sealed class ApiRuntime : IDisposable
     private PeakGameAdapter? adapter;
     private RestServer? server;
     private bool started;
+    private bool tickFailureLogged;
 
     public ApiRuntime(ManualLogSource logSource, ApiConfig apiConfig)
     {
@@ -85,8 +86,22 @@ internal sealed class ApiRuntime : IDisposable
     /// </summary>
     public void Tick()
     {
-        adapter?.Tick();
-        dispatcher?.Pump(config.CommandsPerFrame.Value);
+        try
+        {
+            adapter?.Tick();
+            dispatcher?.Pump(config.CommandsPerFrame.Value);
+            tickFailureLogged = false;
+        }
+        catch (Exception e)
+        {
+            // A game binding failure must never escape into Unity's frame
+            // loop: log it once per distinct failure instead of every frame.
+            if (!tickFailureLogged)
+            {
+                tickFailureLogged = true;
+                log.LogWarning("PEAKapi game tick failed; gameplay commands are paused until it recovers: " + e);
+            }
+        }
     }
 
     /// <summary>

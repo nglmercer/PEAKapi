@@ -71,6 +71,40 @@ level, or when the game is shutting down.
 * The client should also look at `gameplayReady` in `/health`. A reachable
   server outside of a level is not a broken server.
 
+## The game crashes in `EOS_Initialize` on Linux (not PEAKapi)
+
+The crash handler writes a folder per crash under
+`compatdata/3527290/pfx/drive_c/users/steamuser/AppData/Local/Temp/LandCrab/PEAK/Crashes/`.
+If `output_log.txt` ends with this stack, the crash is in the game's own
+Epic Online Services initialisation, before any gameplay:
+
+```
+Epic.OnlineServices.Bindings:EOS_Initialize
+Portningsbolaget.EOSCommon.EpicOnlineService:.ctor
+Portningsbolaget.Platforms.UserManager:Initialize
+GameHandler:Initialize
+GameBooter:AutoBoot
+```
+
+This was verified on 2026-10-19/20 by A/B launches: the game crashes with
+the identical stack with PEAKapi removed, and again with BepInEx fully
+disabled (`enabled = false` in `doorstop_config.ini`). No PEAKapi or
+BepInEx frame appears in any crash dump. The fault is inside
+`EOSSDK-Win64-Shipping.dll` running under Proton, so no PEAKapi update can
+fix it. Things worth trying, in order:
+
+1. Switch the Proton version for PEAK (Steam → Properties → Compatibility):
+   try Proton 9/10 stable or GE-Proton instead of Proton Experimental.
+2. Verify the game files (Steam → Properties → Installed Files).
+3. Disable the Steam Overlay for PEAK.
+4. If it still crashes, report it against PEAK/EOS on Proton with the
+   newest `Crashes/Crash_*/output_log.txt` attached; mention EOS SDK
+   1.19.1.2 and that the game crashes in `EOS_Initialize` on a vanilla
+   install.
+
+While the game is in this state the REST server answers for a few seconds
+and then disappears with the game; see the next section.
+
 ## The game closes right after it starts on Linux
 
 PEAK uses Steamworks.NET. Started outside Steam it asks Steam to restart it
