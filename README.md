@@ -25,7 +25,7 @@ touching the game files.
 | Hazard spawn (Dynamite, Tornado, Tumbleweed) | implemented, **live behaviour not yet verified in a level** |
 | Multiplayer replication | **not verified**; the API never claims it was |
 | Player effects | not implemented, the endpoint answers `501` |
-| Linux and Proton | the plugin loads and serves HTTP; the gameplay gates are the same as on Windows |
+| Linux and Proton | the plugin loads and serves HTTP with the Steam launch option; the gameplay gates are the same as on Windows |
 
 Nothing in this table is marked verified on the strength of a call that
 returned. A feature is only called verified after it was seen working in a
@@ -58,6 +58,31 @@ Copy these three files into `PEAK/BepInEx/plugins/`:
 See [docs/INSTALLATION.md](docs/INSTALLATION.md) for the full instructions,
 including the Proton specific steps.
 
+### Linux and Proton
+
+Proton ships its own `winhttp.dll`, and the BepInEx loader only works when
+the copy in the game folder wins. Without a DLL override the plugin is never
+loaded, and the game starts normally, so the problem is easy to miss. The
+fix is the Steam launch option, which Steam evaluates for every launch:
+
+```
+WINEDLLOVERRIDES="winhttp=n,b" %command%
+```
+
+`scripts/peak-linux.sh` finds the game, checks the installation, keeps a
+backup of everything it touches and can put it all back:
+
+```bash
+./scripts/peak-linux.sh status      # what is installed right now
+./scripts/peak-linux.sh verify      # does the injection really work
+./scripts/peak-linux.sh diagnose    # a redacted report
+./scripts/peak-linux.sh backup      # a backup with SHA-256
+./scripts/peak-linux.sh restore     # put it back
+```
+
+What was measured on Linux is in
+[docs/LINUX_ROOT_CAUSE.md](docs/LINUX_ROOT_CAUSE.md).
+
 ## Use
 
 ```bash
@@ -76,13 +101,21 @@ curl -sS -H "Authorization: Bearer $PEAK_API_TOKEN" \
   "gameRunning": true,
   "inLevel": false,
   "isHost": false,
-  "gameplayReady": false
+  "gameplayReady": false,
+  "serverAlive": true,
+  "gameInitialized": true,
+  "sceneLoaded": true,
+  "hostAuthority": false,
+  "authorityKnown": true,
+  "eosState": "present"
 }
 ```
 
-A running HTTP server is not gameplay readiness. `gameplayReady` is only true
-while a level is loaded, the game is not in the airport and the local peer has
-the authority to change the world.
+A running HTTP server is not gameplay readiness. `status` only says that the
+API answers. `gameplayReady` is the readiness signal, and it is only true
+while a level is loaded, the game is not in the airport and the local peer
+has the authority to change the world. The boolean fields tell the reasons
+apart.
 
 More examples live in [examples/](examples/).
 
@@ -132,6 +165,8 @@ The full contract is in [docs/API.md](docs/API.md) and
 * [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) — what was verified where
 * [docs/TESTING.md](docs/TESTING.md) — what was tested and what is still open
 * [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) — common problems
+* [docs/LINUX_ROOT_CAUSE.md](docs/LINUX_ROOT_CAUSE.md) — what was measured on
+  Linux and Proton
 
 ## Licence
 

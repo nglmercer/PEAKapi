@@ -4,7 +4,10 @@
     "title": "PEAKapi",
     "version": "1.0.0",
     "description": "Local, authenticated REST API for PEAK. The server binds to the loopback interface by default and requires a bearer token. Every mutation is executed on the Unity main thread and requires an Idempotency-Key.",
-    "license": { "name": "MIT", "url": "https://github.com/nglmercer/PEAKapi/blob/main/LICENSE" }
+    "license": {
+      "name": "MIT",
+      "url": "https://github.com/nglmercer/PEAKapi/blob/main/LICENSE"
+    }
   },
   "servers": [
     {
@@ -13,106 +16,154 @@
     }
   ],
   "security": [
-    { "bearerAuth": [] }
+    {
+      "bearerAuth": []
+    }
   ],
   "tags": [
-    { "name": "health", "description": "Reachability and readiness." },
-    { "name": "catalog", "description": "Discoverable game content." },
-    { "name": "gameplay", "description": "Mutations that change the world." }
+    {
+      "name": "health",
+      "description": "Reachability and readiness."
+    },
+    {
+      "name": "catalog",
+      "description": "Discoverable game content."
+    },
+    {
+      "name": "gameplay",
+      "description": "Mutations that change the world."
+    }
   ],
   "paths": {
     "/health": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "HTTP reachability and gameplay readiness.",
-        "description": "A working HTTP server is not gameplay readiness. gameplayReady stays false in menus, in the airport, during transitions and without host authority.",
+        "description": "A working HTTP server is not gameplay readiness. gameplayReady stays false in menus, in the airport, during transitions and without host authority while RequireHost is on. status only says that the API server answers; the readiness breakdown is in the boolean fields.",
         "responses": {
           "200": {
             "description": "The API answered.",
             "headers": {
-              "Cache-Control": { "schema": { "type": "string" }, "description": "Always no-store." }
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Always no-store."
+              }
             },
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Health" }
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/version": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "Versions of the API, the game and its runtime.",
         "responses": {
           "200": {
             "description": "The versions.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Versions" }
+                "schema": {
+                  "$ref": "#/components/schemas/Versions"
+                }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/capabilities": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "Supported and unsupported actions with their reasons.",
         "responses": {
           "200": {
             "description": "The capability report.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Capabilities" }
+                "schema": {
+                  "$ref": "#/components/schemas/Capabilities"
+                }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/game/state": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "The current level, session and authority.",
         "responses": {
           "200": {
             "description": "The game state.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/GameState" }
+                "schema": {
+                  "$ref": "#/components/schemas/GameState"
+                }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/openapi.json": {
       "get": {
-        "tags": ["health"],
+        "tags": [
+          "health"
+        ],
         "summary": "This contract.",
         "responses": {
           "200": {
             "description": "The OpenAPI document.",
             "content": {
               "application/json": {
-                "schema": { "type": "object" }
+                "schema": {
+                  "type": "object"
+                }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/players": {
       "get": {
-        "tags": ["catalog"],
+        "tags": [
+          "catalog"
+        ],
         "summary": "The players of the current session.",
         "description": "Only non sensitive information is exposed. The id is opaque and scoped to the session.",
         "responses": {
@@ -125,24 +176,32 @@
                   "properties": {
                     "players": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/Player" }
+                      "items": {
+                        "$ref": "#/components/schemas/Player"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/catalog/items": {
       "get": {
-        "tags": ["catalog"],
+        "tags": [
+          "catalog"
+        ],
         "summary": "The spawnable items of the running game.",
         "description": "Discovered from the game's own item registry, so modded items appear next to the vanilla ones. Nothing is instantiated while listing.",
         "parameters": [
-          { "$ref": "#/components/parameters/Search" }
+          {
+            "$ref": "#/components/parameters/Search"
+          }
         ],
         "responses": {
           "200": {
@@ -154,24 +213,32 @@
                   "properties": {
                     "items": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/CatalogEntry" }
+                      "items": {
+                        "$ref": "#/components/schemas/CatalogEntry"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/catalog/entities": {
       "get": {
-        "tags": ["catalog"],
+        "tags": [
+          "catalog"
+        ],
         "summary": "The hostile and neutral entities PEAKapi knows about.",
         "description": "An entry is only spawnable when the running game was probed and the entity was found.",
         "parameters": [
-          { "$ref": "#/components/parameters/Search" }
+          {
+            "$ref": "#/components/parameters/Search"
+          }
         ],
         "responses": {
           "200": {
@@ -183,23 +250,31 @@
                   "properties": {
                     "entities": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/CatalogEntry" }
+                      "items": {
+                        "$ref": "#/components/schemas/CatalogEntry"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/catalog/hazards": {
       "get": {
-        "tags": ["catalog"],
+        "tags": [
+          "catalog"
+        ],
         "summary": "The environmental hazards PEAKapi knows about.",
         "parameters": [
-          { "$ref": "#/components/parameters/Search" }
+          {
+            "$ref": "#/components/parameters/Search"
+          }
         ],
         "responses": {
           "200": {
@@ -211,20 +286,26 @@
                   "properties": {
                     "hazards": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/CatalogEntry" }
+                      "items": {
+                        "$ref": "#/components/schemas/CatalogEntry"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/entities": {
       "get": {
-        "tags": ["gameplay"],
+        "tags": [
+          "gameplay"
+        ],
         "summary": "The objects PEAKapi created and still owns.",
         "responses": {
           "200": {
@@ -236,30 +317,40 @@
                   "properties": {
                     "entities": {
                       "type": "array",
-                      "items": { "$ref": "#/components/schemas/OwnedInstance" }
+                      "items": {
+                        "$ref": "#/components/schemas/OwnedInstance"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
         }
       }
     },
     "/api/spawn/item": {
       "post": {
-        "tags": ["gameplay"],
+        "tags": [
+          "gameplay"
+        ],
         "summary": "Hand an item to a character or place it in the world.",
         "description": "Requires host authority and a loaded level. near_player and random_player hand the item to an eligible character, world_position places it in the world through the game's networked item path.",
         "parameters": [
-          { "$ref": "#/components/parameters/IdempotencyKey" }
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ItemSpawnRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/ItemSpawnRequest"
+              }
             }
           }
         },
@@ -268,38 +359,70 @@
             "description": "The item was created.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SpawnSuccess" }
+                "schema": {
+                  "$ref": "#/components/schemas/SpawnSuccess"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "413": { "$ref": "#/components/responses/PayloadTooLarge" },
-          "415": { "$ref": "#/components/responses/UnsupportedMediaType" },
-          "422": { "$ref": "#/components/responses/Unprocessable" },
-          "429": { "$ref": "#/components/responses/TooManyRequests" },
-          "500": { "$ref": "#/components/responses/InternalError" },
-          "501": { "$ref": "#/components/responses/Unsupported" },
-          "503": { "$ref": "#/components/responses/Unavailable" },
-          "504": { "$ref": "#/components/responses/Timeout" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "501": {
+            "$ref": "#/components/responses/Unsupported"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/Timeout"
+          }
         }
       }
     },
     "/api/spawn/entity": {
       "post": {
-        "tags": ["gameplay"],
+        "tags": [
+          "gameplay"
+        ],
         "summary": "Spawn a hostile or neutral entity.",
         "description": "The entity is created through Photon's network prefab registry, the same mechanism the game uses. The prefab name is read from the component the level places for that entity.",
         "parameters": [
-          { "$ref": "#/components/parameters/IdempotencyKey" }
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/EntitySpawnRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/EntitySpawnRequest"
+              }
             }
           }
         },
@@ -308,36 +431,64 @@
             "description": "The entity was created.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SpawnSuccess" }
+                "schema": {
+                  "$ref": "#/components/schemas/SpawnSuccess"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/Unprocessable" },
-          "429": { "$ref": "#/components/responses/TooManyRequests" },
-          "500": { "$ref": "#/components/responses/InternalError" },
-          "501": { "$ref": "#/components/responses/Unsupported" },
-          "503": { "$ref": "#/components/responses/Unavailable" },
-          "504": { "$ref": "#/components/responses/Timeout" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "501": {
+            "$ref": "#/components/responses/Unsupported"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/Timeout"
+          }
         }
       }
     },
     "/api/spawn/hazard": {
       "post": {
-        "tags": ["gameplay"],
+        "tags": [
+          "gameplay"
+        ],
         "summary": "Spawn an environmental hazard.",
         "description": "Each hazard type has its own creation path and its own cap. A hazard that needs the game's own AI is handed over with the game's initialisation RPC.",
         "parameters": [
-          { "$ref": "#/components/parameters/IdempotencyKey" }
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/HazardSpawnRequest" }
+              "schema": {
+                "$ref": "#/components/schemas/HazardSpawnRequest"
+              }
             }
           }
         },
@@ -346,30 +497,56 @@
             "description": "The hazard was created.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SpawnSuccess" }
+                "schema": {
+                  "$ref": "#/components/schemas/SpawnSuccess"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "422": { "$ref": "#/components/responses/Unprocessable" },
-          "429": { "$ref": "#/components/responses/TooManyRequests" },
-          "500": { "$ref": "#/components/responses/InternalError" },
-          "501": { "$ref": "#/components/responses/Unsupported" },
-          "503": { "$ref": "#/components/responses/Unavailable" },
-          "504": { "$ref": "#/components/responses/Timeout" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/Unprocessable"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "501": {
+            "$ref": "#/components/responses/Unsupported"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          },
+          "504": {
+            "$ref": "#/components/responses/Timeout"
+          }
         }
       }
     },
     "/api/player/effect": {
       "post": {
-        "tags": ["gameplay"],
+        "tags": [
+          "gameplay"
+        ],
         "summary": "Apply an allowlisted gameplay effect to a player.",
         "description": "No effect has been verified against the running game yet, so this endpoint answers 501 until one is.",
         "parameters": [
-          { "$ref": "#/components/parameters/IdempotencyKey" }
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -377,10 +554,19 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["effectId", "playerId"],
+                "required": [
+                  "effectId",
+                  "playerId"
+                ],
                 "properties": {
-                  "effectId": { "type": "string", "maxLength": 256 },
-                  "playerId": { "type": "string", "maxLength": 256 }
+                  "effectId": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "playerId": {
+                    "type": "string",
+                    "maxLength": 256
+                  }
                 },
                 "additionalProperties": false
               }
@@ -392,24 +578,38 @@
             "description": "The effect was applied.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SpawnSuccess" }
+                "schema": {
+                  "$ref": "#/components/schemas/SpawnSuccess"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "501": { "$ref": "#/components/responses/Unsupported" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "501": {
+            "$ref": "#/components/responses/Unsupported"
+          }
         }
       }
     },
     "/api/entities/despawn": {
       "post": {
-        "tags": ["gameplay"],
+        "tags": [
+          "gameplay"
+        ],
         "summary": "Despawn an object PEAKapi created.",
         "description": "Only objects that PEAKapi created can be despawned. Objects of the game or of other mods are never touched.",
         "parameters": [
-          { "$ref": "#/components/parameters/IdempotencyKey" }
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
         ],
         "requestBody": {
           "required": true,
@@ -417,9 +617,14 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["instanceId"],
+                "required": [
+                  "instanceId"
+                ],
                 "properties": {
-                  "instanceId": { "type": "string", "maxLength": 256 }
+                  "instanceId": {
+                    "type": "string",
+                    "maxLength": 256
+                  }
                 },
                 "additionalProperties": false
               }
@@ -431,25 +636,41 @@
             "description": "The object was despawned.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/DespawnSuccess" }
+                "schema": {
+                  "$ref": "#/components/schemas/DespawnSuccess"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "409": { "$ref": "#/components/responses/Conflict" },
-          "501": { "$ref": "#/components/responses/Unsupported" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "501": {
+            "$ref": "#/components/responses/Unsupported"
+          }
         }
       }
     },
     "/api/entities/clear": {
       "post": {
-        "tags": ["gameplay"],
+        "tags": [
+          "gameplay"
+        ],
         "summary": "Clear the objects PEAKapi created.",
         "description": "Only API owned objects are removed.",
         "parameters": [
-          { "$ref": "#/components/parameters/IdempotencyKey" }
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
         ],
         "requestBody": {
           "required": false,
@@ -460,7 +681,11 @@
                 "properties": {
                   "kind": {
                     "type": "string",
-                    "enum": ["all", "entity", "hazard"],
+                    "enum": [
+                      "all",
+                      "entity",
+                      "hazard"
+                    ],
                     "default": "all"
                   }
                 },
@@ -474,13 +699,21 @@
             "description": "The objects were cleared.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/DespawnSuccess" }
+                "schema": {
+                  "$ref": "#/components/schemas/DespawnSuccess"
+                }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" },
-          "409": { "$ref": "#/components/responses/Conflict" }
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
         }
       }
     }
@@ -499,93 +732,157 @@
         "in": "header",
         "required": true,
         "description": "A client generated key of 1 to 128 characters. The same key with the same body runs the command once; the same key with another body is a conflict.",
-        "schema": { "type": "string", "minLength": 1, "maxLength": 128 }
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
       },
       "Search": {
         "name": "search",
         "in": "query",
         "required": false,
         "description": "Case insensitive filter on the id or the name.",
-        "schema": { "type": "string", "maxLength": 128 }
+        "schema": {
+          "type": "string",
+          "maxLength": 128
+        }
       }
     },
     "responses": {
       "BadRequest": {
         "description": "The request was malformed.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "Unauthorized": {
         "description": "The bearer token was missing or wrong.",
         "headers": {
-          "WWW-Authenticate": { "schema": { "type": "string" }, "description": "Always Bearer." }
+          "WWW-Authenticate": {
+            "schema": {
+              "type": "string"
+            },
+            "description": "Always Bearer."
+          }
         },
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "NotFound": {
         "description": "The catalog entry, player or instance does not exist.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "Conflict": {
         "description": "The host is required, the game is not ready, the session changed or the idempotency key conflicts.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "PayloadTooLarge": {
         "description": "The request body is larger than the configured limit.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "UnsupportedMediaType": {
         "description": "The request did not use application/json.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "Unprocessable": {
         "description": "No safe position could be found for the request.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "TooManyRequests": {
         "description": "The request rate limit was exceeded.",
         "headers": {
-          "Retry-After": { "schema": { "type": "string" } }
+          "Retry-After": {
+            "schema": {
+              "type": "string"
+            }
+          }
         },
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "InternalError": {
         "description": "The command failed while it was executed.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "Unsupported": {
         "description": "The action is not supported by this game version or this configuration.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "Unavailable": {
         "description": "The server is overloaded or shutting down.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       },
       "Timeout": {
         "description": "The command expired before it was executed. No action was performed.",
         "content": {
-          "application/json": { "schema": { "$ref": "#/components/schemas/Error" } }
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
         }
       }
     },
@@ -593,32 +890,101 @@
       "Health": {
         "type": "object",
         "properties": {
-          "status": { "type": "string", "example": "ready" },
-          "apiVersion": { "type": "string", "example": "1.0.0" },
-          "gameRunning": { "type": "boolean" },
-          "inLevel": { "type": "boolean" },
-          "isHost": { "type": "boolean" },
-          "gameplayReady": { "type": "boolean" }
+          "status": {
+            "type": "string",
+            "example": "ready",
+            "description": "Always \"ready\": the API server answered. It is not a claim that the game is playable."
+          },
+          "apiVersion": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "gameRunning": {
+            "type": "boolean",
+            "description": "The game's assemblies are loaded, so the API can talk to the game."
+          },
+          "inLevel": {
+            "type": "boolean"
+          },
+          "isHost": {
+            "type": "boolean",
+            "description": "The local peer is the room host and may change the world."
+          },
+          "gameplayReady": {
+            "type": "boolean",
+            "description": "The game is in a level and the local peer may change the world right now."
+          },
+          "serverAlive": {
+            "type": "boolean",
+            "description": "The API server is up. It is true whenever the answer arrives."
+          },
+          "gameInitialized": {
+            "type": "boolean",
+            "description": "The game's assemblies are loaded."
+          },
+          "sceneLoaded": {
+            "type": "boolean",
+            "description": "A scene is loaded."
+          },
+          "hostAuthority": {
+            "type": "boolean",
+            "description": "The local peer is the room host."
+          },
+          "authorityKnown": {
+            "type": "boolean",
+            "description": "The authority of the local peer could be observed. It is false while the networking layer is not loaded, because an unknown authority is never an authority."
+          },
+          "eosState": {
+            "type": "string",
+            "enum": [
+              "present",
+              "absent",
+              "unknown"
+            ],
+            "description": "What could be observed about the Epic Online Services SDK. \"present\" means the SDK is part of the game build, \"absent\" means it is not, \"unknown\" means the game is not loaded yet. The plugin cannot observe whether the SDK initialised and does not claim that it did."
+          }
         }
       },
       "Versions": {
         "type": "object",
         "properties": {
-          "apiVersion": { "type": "string" },
-          "pluginVersion": { "type": "string" },
-          "gameVersion": { "type": "string" },
-          "bepInExVersion": { "type": "string" },
-          "peakLibVersion": { "type": "string" },
-          "unityVersion": { "type": "string" },
-          "platform": { "type": "string" }
+          "apiVersion": {
+            "type": "string"
+          },
+          "pluginVersion": {
+            "type": "string"
+          },
+          "gameVersion": {
+            "type": "string"
+          },
+          "bepInExVersion": {
+            "type": "string"
+          },
+          "peakLibVersion": {
+            "type": "string"
+          },
+          "unityVersion": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
         }
       },
       "FeatureCapability": {
         "type": "object",
         "properties": {
-          "available": { "type": "boolean" },
-          "reason": { "type": "string", "nullable": true },
-          "verified": { "type": "boolean", "nullable": true }
+          "available": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "verified": {
+            "type": "boolean",
+            "nullable": true
+          }
         }
       },
       "Capabilities": {
@@ -627,12 +993,24 @@
           "features": {
             "type": "object",
             "properties": {
-              "items": { "$ref": "#/components/schemas/FeatureCapability" },
-              "entities": { "$ref": "#/components/schemas/FeatureCapability" },
-              "hazards": { "$ref": "#/components/schemas/FeatureCapability" },
-              "effects": { "$ref": "#/components/schemas/FeatureCapability" },
-              "worldPlacement": { "$ref": "#/components/schemas/FeatureCapability" },
-              "multiplayerReplication": { "$ref": "#/components/schemas/FeatureCapability" }
+              "items": {
+                "$ref": "#/components/schemas/FeatureCapability"
+              },
+              "entities": {
+                "$ref": "#/components/schemas/FeatureCapability"
+              },
+              "hazards": {
+                "$ref": "#/components/schemas/FeatureCapability"
+              },
+              "effects": {
+                "$ref": "#/components/schemas/FeatureCapability"
+              },
+              "worldPlacement": {
+                "$ref": "#/components/schemas/FeatureCapability"
+              },
+              "multiplayerReplication": {
+                "$ref": "#/components/schemas/FeatureCapability"
+              }
             }
           }
         }
@@ -640,124 +1018,323 @@
       "GameState": {
         "type": "object",
         "properties": {
-          "gameRunning": { "type": "boolean" },
-          "inLevel": { "type": "boolean" },
-          "isHost": { "type": "boolean" },
-          "gameplayReady": { "type": "boolean" },
-          "scene": { "type": "string" },
-          "sessionId": { "type": "string" }
+          "gameRunning": {
+            "type": "boolean",
+            "description": "The game's assemblies are loaded, so the API can talk to the game."
+          },
+          "inLevel": {
+            "type": "boolean"
+          },
+          "isHost": {
+            "type": "boolean"
+          },
+          "gameplayReady": {
+            "type": "boolean"
+          },
+          "scene": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "gameInitialized": {
+            "type": "boolean",
+            "description": "The game's assemblies are loaded."
+          },
+          "sceneLoaded": {
+            "type": "boolean",
+            "description": "A scene is loaded."
+          },
+          "authorityKnown": {
+            "type": "boolean",
+            "description": "The authority of the local peer could be observed."
+          },
+          "eosState": {
+            "type": "string",
+            "enum": [
+              "present",
+              "absent",
+              "unknown"
+            ],
+            "description": "What could be observed about the Epic Online Services SDK."
+          }
         }
       },
       "CatalogEntry": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "The id to use in a spawn request." },
-          "name": { "type": "string" },
-          "category": { "type": "string", "nullable": true },
-          "origin": { "type": "string", "nullable": true },
-          "spawnable": { "type": "boolean" },
-          "reason": { "type": "string", "nullable": true }
+          "id": {
+            "type": "string",
+            "description": "The id to use in a spawn request."
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "origin": {
+            "type": "string",
+            "nullable": true
+          },
+          "spawnable": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "Player": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "Opaque and scoped to the session." },
-          "name": { "type": "string" },
-          "isLocal": { "type": "boolean" },
-          "isHost": { "type": "boolean" },
-          "isAlive": { "type": "boolean" },
-          "isSpectating": { "type": "boolean" }
+          "id": {
+            "type": "string",
+            "description": "Opaque and scoped to the session."
+          },
+          "name": {
+            "type": "string"
+          },
+          "isLocal": {
+            "type": "boolean"
+          },
+          "isHost": {
+            "type": "boolean"
+          },
+          "isAlive": {
+            "type": "boolean"
+          },
+          "isSpectating": {
+            "type": "boolean"
+          }
         }
       },
       "OwnedInstance": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "catalogId": { "type": "string" },
-          "kind": { "type": "string", "enum": ["entity", "hazard"] },
-          "playerId": { "type": "string", "nullable": true },
-          "expiresAtUnixSeconds": { "type": "number", "nullable": true }
+          "id": {
+            "type": "string"
+          },
+          "catalogId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "entity",
+              "hazard"
+            ]
+          },
+          "playerId": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresAtUnixSeconds": {
+            "type": "number",
+            "nullable": true
+          }
         }
       },
       "Position": {
         "type": "object",
-        "required": ["mode"],
+        "required": [
+          "mode"
+        ],
         "properties": {
-          "mode": { "type": "string", "enum": ["near_player", "random_player", "world_position"] },
-          "playerId": { "type": "string", "nullable": true, "description": "Required for near_player." },
-          "x": { "type": "number", "nullable": true, "minimum": -10000, "maximum": 10000 },
-          "y": { "type": "number", "nullable": true, "minimum": -10000, "maximum": 10000 },
-          "z": { "type": "number", "nullable": true, "minimum": -10000, "maximum": 10000 }
+          "mode": {
+            "type": "string",
+            "enum": [
+              "near_player",
+              "random_player",
+              "world_position"
+            ]
+          },
+          "playerId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Required for near_player."
+          },
+          "x": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "y": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -10000,
+            "maximum": 10000
+          },
+          "z": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -10000,
+            "maximum": 10000
+          }
         },
         "additionalProperties": false
       },
       "ItemSpawnRequest": {
         "type": "object",
-        "required": ["itemId", "position"],
+        "required": [
+          "itemId",
+          "position"
+        ],
         "properties": {
-          "itemId": { "type": "string", "maxLength": 256 },
-          "quantity": { "type": "integer", "minimum": 1, "maximum": 5, "default": 1 },
-          "position": { "$ref": "#/components/schemas/Position" }
+          "itemId": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "default": 1
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          }
         },
         "additionalProperties": false
       },
       "EntitySpawnRequest": {
         "type": "object",
-        "required": ["entityId", "position"],
+        "required": [
+          "entityId",
+          "position"
+        ],
         "properties": {
-          "entityId": { "type": "string", "maxLength": 256 },
-          "quantity": { "type": "integer", "minimum": 1, "maximum": 5, "default": 1 },
-          "position": { "$ref": "#/components/schemas/Position" },
-          "lifetimeSeconds": { "type": "number", "minimum": 1, "maximum": 300, "nullable": true }
+          "entityId": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "default": 1
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "lifetimeSeconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 300,
+            "nullable": true
+          }
         },
         "additionalProperties": false
       },
       "HazardSpawnRequest": {
         "type": "object",
-        "required": ["hazardId", "position"],
+        "required": [
+          "hazardId",
+          "position"
+        ],
         "properties": {
-          "hazardId": { "type": "string", "maxLength": 256 },
-          "quantity": { "type": "integer", "minimum": 1, "maximum": 5, "default": 1 },
-          "position": { "$ref": "#/components/schemas/Position" },
-          "lifetimeSeconds": { "type": "number", "minimum": 1, "maximum": 300, "nullable": true }
+          "hazardId": {
+            "type": "string",
+            "maxLength": 256
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5,
+            "default": 1
+          },
+          "position": {
+            "$ref": "#/components/schemas/Position"
+          },
+          "lifetimeSeconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 300,
+            "nullable": true
+          }
         },
         "additionalProperties": false
       },
       "SpawnedInstance": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "The opaque instance id of the created object." },
-          "catalogId": { "type": "string" },
-          "playerId": { "type": "string", "nullable": true }
+          "id": {
+            "type": "string",
+            "description": "The opaque instance id of the created object."
+          },
+          "catalogId": {
+            "type": "string"
+          },
+          "playerId": {
+            "type": "string",
+            "nullable": true
+          }
         }
       },
       "SpawnResult": {
         "type": "object",
         "properties": {
-          "spawned": { "type": "array", "items": { "$ref": "#/components/schemas/SpawnedInstance" } },
-          "count": { "type": "integer" },
-          "replicationVerified": { "type": "boolean", "description": "False until a two client session proved the replication." },
-          "failures": { "type": "array", "items": { "type": "string" } }
+          "spawned": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpawnedInstance"
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "replicationVerified": {
+            "type": "boolean",
+            "description": "False until a two client session proved the replication."
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       },
       "SpawnSuccess": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": true },
-          "result": { "$ref": "#/components/schemas/SpawnResult" }
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "result": {
+            "$ref": "#/components/schemas/SpawnResult"
+          }
         }
       },
       "DespawnSuccess": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": true },
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
           "result": {
             "type": "object",
             "properties": {
-              "removed": { "type": "integer" },
-              "removedIds": { "type": "array", "items": { "type": "string" } },
-              "skipped": { "type": "array", "items": { "type": "string" } }
+              "removed": {
+                "type": "integer"
+              },
+              "removedIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "skipped": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -765,7 +1342,10 @@
       "Error": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": false },
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
           "error": {
             "type": "object",
             "properties": {
@@ -809,8 +1389,12 @@
                   "COMMAND_TIMEOUT"
                 ]
               },
-              "message": { "type": "string" },
-              "details": { "nullable": true }
+              "message": {
+                "type": "string"
+              },
+              "details": {
+                "nullable": true
+              }
             }
           }
         }

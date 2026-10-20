@@ -28,6 +28,29 @@ game drives it, by pumping it from the test.
 | Quotas | The global and the per type caps |
 | The HTTP server | A real request over a real socket, the 401 with the `WWW-Authenticate` header, a second start is refused |
 | The contract | The embedded `openapi.json` is valid and describes the routes |
+| Readiness | The readiness breakdown of `/health`, the host authority rule, an unknown EOS state |
+
+## The Linux helper
+
+`scripts/peak-linux.sh` is covered by `tests/shell/peak-linux-test.sh`. The
+suite builds a fake Steam installation in a temporary directory and never
+touches a real game. It runs in CI and needs nothing but bash and coreutils.
+
+```bash
+./tests/shell/peak-linux-test.sh
+```
+
+| Area | What is covered |
+|---|---|
+| Discovery | A native Steam root, a Flatpak Steam root, an extra library folder, both `libraryfolders.vdf` layouts, a symlinked root, spaces in the path |
+| Verification | The game executable is a 64 bit PE, a 32 bit one is refused |
+| Backup and restore | The round trip, an idempotent restore, a file that changed behind our back, `--force` |
+| Dry runs | A dry run writes nothing |
+| The EOS fallback | Disabling and restoring, a missing EOS SDK, a file that was changed while it was disabled |
+| Installing | An unknown proxy is never overwritten, the Steam launch option is printed |
+| Verification of the injection | A missing loader, a stale log, a fresh log |
+| The diagnostics | The bearer token and the home directory are not in the report |
+| Permissions | A directory that cannot be written is reported, not ignored |
 
 ## The game side
 
@@ -66,6 +89,8 @@ marked as passed without an observation.
 | 12 | Leave and re-enter a level | The session is invalidated, the API owned objects are cleaned up | **pending** |
 | 13 | Close the game with requests pending | No hanging listener, no hanging process | **pending** |
 | 14 | Repeat the relevant checks on Windows | The same behaviour | **pending** |
+| 15 | The launch option makes the proxy win | `BepInEx/LogOutput.log` is from this launch and names PEAKapi | **verified** on Proton 11.0-100, see [LINUX_ROOT_CAUSE.md](LINUX_ROOT_CAUSE.md) |
+| 16 | The game survives without the proxy | The game reaches the menu with the original EOS SDK | **verified** in the runtime matrix, case 1 |
 
 ### How to run the checklist
 
@@ -112,23 +137,36 @@ These are the answers a running PEAK 2.6.b gave, captured under Proton:
 | Request | Answer |
 |---|---|
 | `GET /health` without a token | `401` with `{"code":"UNAUTHORIZED","message":"A valid bearer token is required."}` |
-| `GET /health` with the token | `504` with `{"code":"COMMAND_TIMEOUT","message":"Command expired before execution; no action was performed."}` |
+| `GET /health` with the token, the game not running its main loop | `504` with `{"code":"COMMAND_TIMEOUT","message":"Command expired before execution; no action was performed."}` |
 
-The second answer is the important one. It shows that the token was
-accepted, that the request reached the router, that the request was queued on
-the Unity main thread and that the queue expired without running it. That is
-the documented behaviour for a game that is not running its main loop.
-
-The game was in that state because Steamworks.NET asked Steam to restart it:
+The second answer shows that the token was accepted, that the request
+reached the router, that the request was queued on the Unity main thread and
+that the queue expired without running it. That is the documented behaviour
+for a game that is not running its main loop, for example while
+Steamworks.NET asks Steam to restart it:
 
 ```
 [Steamworks.NET] Shutting down because RestartAppIfNecessary returned true. Steam will restart the application.
 ```
 
 The same happens with the BepInEx loader removed, so it is a property of
-this environment and not of PEAKapi. It has to be resolved by starting the
-game from a Steam client that can launch it, and by playing into a level,
-before the gameplay rows above can be checked.
+this environment and not of PEAKapi.
+
+## The runtime matrix
+
+`scripts/peak-repro-matrix.sh` runs the five loader configurations, each in
+a fresh Steam launch with the logs cleared beforehand, and writes the
+artifacts to `artifacts/matrix/`. The result of the last run is in
+[artifacts/matrix/REPORT.md](../artifacts/matrix/REPORT.md) and the analysis
+is in [LINUX_ROOT_CAUSE.md](LINUX_ROOT_CAUSE.md).
+
+| Case | What it proves |
+|---|---|
+| 1. true vanilla | The game runs with the original EOS SDK when the proxy is not in the process |
+| 2. proxy present, doorstop disabled | The proxy is still loaded, so this is **not** a vanilla baseline |
+| 3. proxy and BepInEx, no plugin | The loader works without PEAKapi |
+| 4. proxy, BepInEx and PEAKapi | The shipped configuration |
+| 5. like 4 with the EOS SDK disabled | A degraded mode, only for diagnosis |
 
 ## The environment these results come from
 
@@ -138,7 +176,7 @@ before the gameplay rows above can be checked.
 | .NET SDK | 10.0.402 |
 | Game | PEAK 2.6.b, build 25739797, Unity 6000.3.15f1 |
 | BepInEx | 5.4.23.3 (PEAK pack 5.4.75301) |
-| Runtime | Proton Experimental |
+| Runtime | Proton 11.0-100 (`proton-11.0-2e-x86_64`) |
 
 The plugin loads and serves HTTP under Proton. The gameplay checks in the
 table above are still open.
